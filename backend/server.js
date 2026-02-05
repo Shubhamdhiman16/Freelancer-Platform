@@ -1,20 +1,22 @@
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config();
-
-const connectDB = require("./config/db");
+const mongoose = require("mongoose");
 
 const app = express();
 
-connectDB(); 
-
+// middleware
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("Backend Running");
-});
+// routes
+const freelancerRoutes = require("./routes/freelancerRoutes");
+app.use("/api/freelancers", freelancerRoutes);
 
-app.listen(process.env.PORT, () => {
-  console.log("Server running on port", process.env.PORT);
+// db
+mongoose.connect("mongodb://127.0.0.1:27017/freelancerDB")
+.then(() => console.log("MongoDB connected"))
+.catch(err => console.log(err));
+
+app.listen(5000, () => {
+    console.log("Server running on port 5000 🚀");
 });
