@@ -42,7 +42,7 @@ export function AuthProvider({ children }) {
         password,
       });
 
-      const data = response.data;
+      const data = response.data || response;
 
       if (data && data.token) {
         localStorage.setItem("authToken", data.token);
@@ -54,9 +54,8 @@ export function AuthProvider({ children }) {
       return { error: "Invalid response from server" };
     } catch (error) {
       console.error("Sign in error:", error);
-      return {
-        error: error.response?.data?.message || "Sign in failed",
-      };
+      const errorMessage = error.message || "Sign in failed";
+      return { error: errorMessage };
     }
   };
 
@@ -68,7 +67,7 @@ export function AuthProvider({ children }) {
         fullName,
       });
 
-      const data = response.data;
+      const data = response.data || response;
 
       if (data && data.token) {
         localStorage.setItem("authToken", data.token);
@@ -80,9 +79,8 @@ export function AuthProvider({ children }) {
       return { error: "Invalid response from server" };
     } catch (error) {
       console.error("Sign up error:", error);
-      return {
-        error: error.response?.data?.message || "Sign up failed",
-      };
+      const errorMessage = error.message || "Sign up failed";
+      return { error: errorMessage };
     }
   };
 

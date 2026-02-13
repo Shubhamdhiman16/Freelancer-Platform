@@ -26,8 +26,8 @@ export const apiClient = {
           localStorage.removeItem('authToken');
           window.location.href = '/auth';
         }
-        const errorData = await response.json().catch(() => ({ error: response.statusText }));
-        throw new Error(errorData.error || `API error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || errorData.error || `API error: ${response.status}`);
       }
 
       const data = await response.json();
