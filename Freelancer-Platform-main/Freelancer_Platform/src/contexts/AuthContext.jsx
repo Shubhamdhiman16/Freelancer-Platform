@@ -1,5 +1,5 @@
-﻿import { createContext, useContext, useEffect, useState } from 'react';
-import { apiClient } from '@/integrations/mongodb/client';
+﻿import { createContext, useContext, useEffect, useState } from "react";
+import { apiClient } from "@/integrations/mongodb/client";
 
 const AuthContext = createContext(undefined);
 
@@ -14,19 +14,22 @@ export function AuthProvider({ children }) {
 
   const initializeAuth = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("authToken");
+
       if (token) {
-        const userData = await apiClient.get('/api/auth/me');
-        if (userData && userData.user) {
-          setUser(userData.user);
-          setRole(userData.user.role || 'user');
+        const response = await apiClient.get("/api/auth/me");
+        const data = response.data;
+
+        if (data && data.user) {
+          setUser(data.user);
+          setRole(data.user.role || "user");
         } else {
-          localStorage.removeItem('authToken');
+          localStorage.removeItem("authToken");
         }
       }
     } catch (error) {
-      console.error('Auth initialization error:', error);
-      localStorage.removeItem('authToken');
+      console.error("Auth initialization error:", error);
+      localStorage.removeItem("authToken");
     } finally {
       setLoading(false);
     }
@@ -34,47 +37,62 @@ export function AuthProvider({ children }) {
 
   const signIn = async (email, password) => {
     try {
-      const response = await apiClient.post('/api/auth/signin', { email, password });
-      if (response && response.token) {
-        localStorage.setItem('authToken', response.token);
-        setUser(response.user);
-        setRole(response.user?.role || 'user');
+      const response = await apiClient.post("/api/auth/signin", {
+        email,
+        password,
+      });
+
+      const data = response.data;
+
+      if (data && data.token) {
+        localStorage.setItem("authToken", data.token);
+        setUser(data.user);
+        setRole(data.user?.role || "user");
         return { error: null };
       }
-      return { error: 'Invalid response from server' };
+
+      return { error: "Invalid response from server" };
     } catch (error) {
-      console.error('Sign in error:', error);
-      return { error: error.message || 'Sign in failed' };
+      console.error("Sign in error:", error);
+      return {
+        error: error.response?.data?.message || "Sign in failed",
+      };
     }
   };
 
   const signUp = async (email, password, fullName) => {
     try {
-      const response = await apiClient.post('/api/auth/signup', { 
-        email, 
-        password, 
-        fullName 
+      const response = await apiClient.post("/api/auth/signup", {
+        email,
+        password,
+        fullName,
       });
-      if (response && response.token) {
-        localStorage.setItem('authToken', response.token);
-        setUser(response.user);
-        setRole(response.user?.role || 'user');
+
+      const data = response.data;
+
+      if (data && data.token) {
+        localStorage.setItem("authToken", data.token);
+        setUser(data.user);
+        setRole(data.user?.role || "user");
         return { error: null };
       }
-      return { error: 'Invalid response from server' };
+
+      return { error: "Invalid response from server" };
     } catch (error) {
-      console.error('Sign up error:', error);
-      return { error: error.message || 'Sign up failed' };
+      console.error("Sign up error:", error);
+      return {
+        error: error.response?.data?.message || "Sign up failed",
+      };
     }
   };
 
   const signOut = async () => {
     try {
-      await apiClient.post('/api/auth/signout', {});
+      await apiClient.post("/api/auth/signout");
     } catch (error) {
-      console.error('Sign out error:', error);
+      console.error("Sign out error:", error);
     } finally {
-      localStorage.removeItem('authToken');
+      localStorage.removeItem("authToken");
       setUser(null);
       setRole(null);
     }
@@ -94,8 +112,10 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
   }
+
   return context;
 }
