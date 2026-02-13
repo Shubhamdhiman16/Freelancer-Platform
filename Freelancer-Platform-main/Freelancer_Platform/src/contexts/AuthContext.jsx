@@ -9,25 +9,24 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in via token
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      checkAuthStatus();
-    } else {
-      setLoading(false);
-    }
+    initializeAuth();
   }, []);
 
-  const checkAuthStatus = async () => {
+  const initializeAuth = async () => {
     try {
-      const userData = await apiClient.get('/api/auth/me');
-      setUser(userData.user);
-      setRole(userData.user.role);
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        const userData = await apiClient.get('/api/auth/me');
+        if (userData && userData.user) {
+          setUser(userData.user);
+          setRole(userData.user.role || 'user');
+        } else {
+          localStorage.removeItem('authToken');
+        }
+      }
     } catch (error) {
-      console.error('Error checking auth status:', error);
+      console.error('Auth initialization error:', error);
       localStorage.removeItem('authToken');
-      setUser(null);
-      setRole(null);
     } finally {
       setLoading(false);
     }
@@ -36,12 +35,16 @@ export function AuthProvider({ children }) {
   const signIn = async (email, password) => {
     try {
       const response = await apiClient.post('/api/auth/signin', { email, password });
-      localStorage.setItem('authToken', response.token);
-      setUser(response.user);
-      setRole(response.user.role);
-      return { error: null };
+      if (response && response.token) {
+        localStorage.setItem('authToken', response.token);
+        setUser(response.user);
+        setRole(response.user?.role || 'user');
+        return { error: null };
+      }
+      return { error: 'Invalid response from server' };
     } catch (error) {
-      return { error: error.message };
+      console.error('Sign in error:', error);
+      return { error: error.message || 'Sign in failed' };
     }
   };
 
@@ -52,12 +55,16 @@ export function AuthProvider({ children }) {
         password, 
         fullName 
       });
-      localStorage.setItem('authToken', response.token);
-      setUser(response.user);
-      setRole(response.user.role);
-      return { error: null };
+      if (response && response.token) {
+        localStorage.setItem('authToken', response.token);
+        setUser(response.user);
+        setRole(response.user?.role || 'user');
+        return { error: null };
+      }
+      return { error: 'Invalid response from server' };
     } catch (error) {
-      return { error: error.message };
+      console.error('Sign up error:', error);
+      return { error: error.message || 'Sign up failed' };
     }
   };
 

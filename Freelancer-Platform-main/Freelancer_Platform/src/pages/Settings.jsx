@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import {
-  Settings,
+  Settings as SettingsIcon,
   Bell,
   Shield,
   Palette,
@@ -144,76 +144,92 @@ export default function Settings() {
   ];
 
   return (
-    
+    <div className="min-h-screen bg-background p-6">
       {/* Header */}
-      
-        
-          Settings</h1>
-          Configure platform settings and preferences</p>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Settings</h1>
+            <p className="text-muted-foreground">Configure platform settings and preferences</p>
+          </div>
+          {isAdmin && (
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          )}
         </div>
-        {isAdmin && (
-          
-            {saving ? (
-              <>
-                
-                Saving...
-              </>
-            ) : (
-              <>
-                
-                Save Changes
-              </>
-            )}
-          </Button>
-        )}
       </motion.div>
 
       {/* Settings Sections */}
       {loading ? (
-        
-          
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      ) => (
-            
-              
-                
-                  
-                    
-                      
-                    </div>
-                    
-                      {section.title}</CardTitle>
-                      {section.description}</CardDescription>
-                    </div>
+      ) : (
+        <div className="space-y-6">
+          {settingSections.map((section, index) => (
+            <motion.div
+              key={section.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 + index * 0.1 }}
+            >
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center space-x-2">
+                    <section.icon className="h-5 w-5 text-primary" />
+                    <CardTitle>{section.title}</CardTitle>
                   </div>
+                  <CardDescription>{section.description}</CardDescription>
                 </CardHeader>
-                
+                <CardContent className="space-y-4">
                   {section.settings.map((setting, index) => (
-                    
-                      {index > 0 && }
-                      
-                        
-                          {setting.label}</Label>
-                          
+                    <div key={setting.key}>
+                      {index > 0 && <Separator />}
+                      <div className="flex items-center justify-between py-4">
+                        <div className="space-y-1">
+                          <Label>{setting.label}</Label>
+                          <p className="text-sm text-muted-foreground">
                             {setting.description}
                           </p>
                         </div>
-                        
+                        <div>
                           {setting.type === 'toggle' ? (
-                            
+                            <Switch
+                              checked={settings[setting.key]?.enabled || false}
+                              onCheckedChange={(checked) =>
                                 updateSetting(setting.key, { enabled: checked })
                               }
                               disabled={!isAdmin}
                             />
                           ) : setting.type === 'text' ? (
-                            
+                            <Input
+                              value={settings[setting.key]?.value || ''}
+                              onChange={(e) =>
                                 updateSetting(setting.key, { value: e.target.value })
                               }
                               className="w-48"
                               disabled={!isAdmin}
                             />
                           ) : setting.type === 'number' ? (
-                            
+                            <Input
+                              type="number"
+                              value={settings[setting.key]?.value || 0}
+                              onChange={(e) =>
                                 updateSetting(setting.key, { value: parseInt(e.target.value) || 0 })
                               }
                               className="w-32"
@@ -230,21 +246,25 @@ export default function Settings() {
           ))}
 
           {/* Info Card */}
-          
-            
-              
-                
-                  
-                    
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-start space-x-4">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <SettingsIcon className="h-6 w-6 text-primary" />
                   </div>
-                  
-                    Freelancer Platform</h3>
-                    
+                  <div>
+                    <h3 className="text-lg font-semibold">Freelancer Platform</h3>
+                    <p className="text-muted-foreground mb-2">
                       This is a placement project demonstrating a full-stack freelancer management platform
                       with JWT authentication, role-based access control, and complete CRUD operations.
                     </p>
-                    
-                      Features:</strong> User Authentication, Freelancer Management, Reports,
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Features:</strong> User Authentication, Freelancer Management, Reports,
                       Admin Panel, Settings, and more.
                     </p>
                   </div>

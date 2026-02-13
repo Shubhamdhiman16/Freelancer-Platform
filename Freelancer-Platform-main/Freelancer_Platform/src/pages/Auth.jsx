@@ -9,17 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Briefcase, Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
-import { z } from 'zod';
-
-const emailSchema = z.string().email('Please enter a valid email address');
-const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
-  // Form states
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
@@ -27,20 +22,15 @@ export default function Auth() {
   const [signupName, setSignupName] = useState('');
 
   if (user) {
-    return ;
+    return <Navigate to="/dashboard" replace />;
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    
-    try {
-      emailSchema.parse(loginEmail);
-      passwordSchema.parse(loginPassword);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        toast.error(err.errors[0].message);
-        return;
-      }
+
+    if (!loginEmail || !loginPassword) {
+      toast.error('Please fill in all fields');
+      return;
     }
 
     setIsLoading(true);
@@ -48,13 +38,7 @@ export default function Auth() {
     setIsLoading(false);
 
     if (error) {
-      if (error.message.includes('Invalid login credentials')) {
-        toast.error('Invalid email or password');
-      } else if (error.message.includes('Email not confirmed')) {
-        toast.error('Please verify your email before signing in');
-      } else {
-        toast.error(error.message);
-      }
+      toast.error(error.message || 'Login failed');
       return;
     }
 
@@ -62,21 +46,17 @@ export default function Auth() {
     navigate('/dashboard');
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    
-    try {
-      emailSchema.parse(signupEmail);
-      passwordSchema.parse(signupPassword);
-      if (!signupName.trim()) {
-        toast.error('Please enter your full name');
-        return;
-      }
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        toast.error(err.errors[0].message);
-        return;
-      }
+
+    if (!signupEmail || !signupPassword || !signupName) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    if (signupPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
     }
 
     setIsLoading(true);
@@ -84,130 +64,163 @@ export default function Auth() {
     setIsLoading(false);
 
     if (error) {
-      if (error.message.includes('User already registered')) {
-        toast.error('An account with this email already exists');
-      } else {
-        toast.error(error.message);
-      }
+      toast.error(error.message || 'Sign up failed');
       return;
     }
 
-    toast.success('Account created! Please check your email to verify your account.');
+    toast.success('Account created successfully!');
+    navigate('/dashboard');
   };
 
   return (
-    
-      {/* Background */}
-      
-      
-      
-      
-      
-        {/* Logo */}
-        
-          
-            
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+        className="w-full max-w-md"
+      >
+        <div className="text-center mb-8">
+          <div className="inline-flex p-3 rounded-full gradient-primary/10 mb-4">
+            <Briefcase className="h-8 w-8 text-primary" />
           </div>
-          FreelanceHub</h1>
-        </motion.div>
+          <h1 className="text-3xl font-bold gradient-text">FreelanceHub</h1>
+          <p className="text-muted-foreground mt-2">Freelancer Management Platform</p>
+        </div>
 
-        
-          
-            Welcome</CardTitle>
-            Sign in to manage your freelancer platform</CardDescription>
-          </CardHeader>
-          
-            
-              
-                Sign In</TabsTrigger>
-                Sign Up</TabsTrigger>
-              </TabsList>
+        <Card>
+          <Tabs defaultValue="signin" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 rounded-t-lg rounded-b-none border-b">
+              <TabsTrigger value="signin">Sign In</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
 
-              
-                
-                  
-                    Email</Label>
-                    
-                      
-                       setLoginEmail(e.target.value)}
+            <TabsContent value="signin">
+              <CardContent className="pt-6">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
                         className="pl-10"
-                        required
+                        disabled={isLoading}
                       />
                     </div>
                   </div>
-                  
-                    Password</Label>
-                    
-                      
-                       setLoginPassword(e.target.value)}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
                         className="pl-10"
-                        required
+                        disabled={isLoading}
                       />
                     </div>
                   </div>
-                  
+
+                  <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? (
-                      
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Signing in...
+                      </>
                     ) : (
                       <>
-                        Sign In 
+                        Sign In
+                        <ArrowRight className="ml-2 h-4 w-4" />
                       </>
                     )}
                   </Button>
-                </motion.form>
-              </TabsContent>
+                </form>
+              </CardContent>
+            </TabsContent>
 
-              
-                
-                  
-                    Full Name</Label>
-                    
-                      
-                       setSignupName(e.target.value)}
+            <TabsContent value="signup">
+              <CardContent className="pt-6">
+                <form onSubmit={handleSignup} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="name"
+                        type="text"
+                        placeholder="John Doe"
+                        value={signupName}
+                        onChange={(e) => setSignupName(e.target.value)}
                         className="pl-10"
-                        required
+                        disabled={isLoading}
                       />
                     </div>
                   </div>
-                  
-                    Email</Label>
-                    
-                      
-                       setSignupEmail(e.target.value)}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={signupEmail}
+                        onChange={(e) => setSignupEmail(e.target.value)}
                         className="pl-10"
-                        required
+                        disabled={isLoading}
                       />
                     </div>
                   </div>
-                  
-                    Password</Label>
-                    
-                      
-                       setSignupPassword(e.target.value)}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={signupPassword}
+                        onChange={(e) => setSignupPassword(e.target.value)}
                         className="pl-10"
-                        required
-                        minLength={6}
+                        disabled={isLoading}
                       />
                     </div>
+                    <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
                   </div>
-                  
+
+                  <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? (
-                      
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating account...
+                      </>
                     ) : (
                       <>
-                        Create Account 
+                        Create Account
+                        <ArrowRight className="ml-2 h-4 w-4" />
                       </>
                     )}
                   </Button>
-                </motion.form>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
+                </form>
+              </CardContent>
+            </TabsContent>
+          </Tabs>
         </Card>
 
-        
-          Freelancer Platform for Placement Project
-        </motion.p>
+        <p className="text-center text-sm text-muted-foreground mt-4">
+          Built with React, Node.js, and MongoDB
+        </p>
       </motion.div>
     </div>
   );

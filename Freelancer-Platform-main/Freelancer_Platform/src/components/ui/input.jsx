@@ -1,14 +1,18 @@
-﻿import * as React from "react";
+﻿import React from "react";
 
-import { cn } from "@/lib/utils";
+const Input = React.forwardRef(function Input(props, ref) {
+  const { className, type, ...rest } = props;
 
-const Input = React.forwardRef>(
-  ({ className, type, ...props }, ref) => {
-    return (
-      
-    );
-  },
-);
+  return (
+    <input
+      type={type}
+      className={className}
+      ref={ref}
+      {...rest}
+    />
+  );
+});
+
 Input.displayName = "Input";
 
 export { Input };
