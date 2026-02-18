@@ -1,5 +1,4 @@
-﻿import { createContext, useContext, useEffect, useState } from "react";
-import { apiClient } from "@/integrations/mongodb/client";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext(undefined);
 
@@ -17,12 +16,20 @@ export function AuthProvider({ children }) {
       const token = localStorage.getItem("authToken");
 
       if (token) {
-        const response = await apiClient.get("/api/auth/me");
-        const data = response.data;
+        const response = await fetch('http://localhost:5001/api/auth/me', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-        if (data && data.user) {
-          setUser(data.user);
-          setRole(data.user.role || "user");
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.user) {
+            setUser(data.user);
+            setRole(data.user.role || "client");
+          } else {
+            localStorage.removeItem("authToken");
+          }
         } else {
           localStorage.removeItem("authToken");
         }
@@ -37,17 +44,25 @@ export function AuthProvider({ children }) {
 
   const signIn = async (email, password) => {
     try {
-      const response = await apiClient.post("/api/auth/signin", {
-        email,
-        password,
+      const response = await fetch('http://localhost:5001/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       });
 
-      const data = response.data || response;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || errorData.error || `API error: ${response.status}`);
+      }
+
+      const data = await response.json();
 
       if (data && data.token) {
         localStorage.setItem("authToken", data.token);
         setUser(data.user);
-        setRole(data.user?.role || "user");
+        setRole(data.user?.role || "client");
         return { error: null };
       }
 
@@ -59,20 +74,27 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const signUp = async (email, password, fullName) => {
+  const signUp = async (email, password, fullName, role = 'client') => {
     try {
-      const response = await apiClient.post("/api/auth/signup", {
-        email,
-        password,
-        fullName,
+      const response = await fetch('http://localhost:5001/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, fullName, role }),
       });
 
-      const data = response.data || response;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || errorData.error || `API error: ${response.status}`);
+      }
+
+      const data = await response.json();
 
       if (data && data.token) {
         localStorage.setItem("authToken", data.token);
         setUser(data.user);
-        setRole(data.user?.role || "user");
+        setRole(data.user?.role || "client");
         return { error: null };
       }
 
@@ -86,7 +108,12 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     try {
-      await apiClient.post("/api/auth/signout");
+      await fetch('http://localhost:5001/api/auth/signout', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
     } catch (error) {
       console.error("Sign out error:", error);
     } finally {

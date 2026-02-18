@@ -9,17 +9,23 @@ const router = express.Router();
 const generateToken = (userId, email, role) => {
   return jwt.sign(
     { userId, email, role },
-    process.env.JWT_SECRET,
+    process.env.JWT_SECRET || 'fallback_jwt_secret_change_in_production',
     { expiresIn: '7d' }
   );
 };
 
 router.post('/signup', async (req, res) => {
   try {
-    const { email, password, fullName } = req.body;
+    const { email, password, fullName, role } = req.body;
 
     if (!email || !password || !fullName) {
       return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Validate role
+    const validRoles = ['client', 'freelancer', 'admin'];
+    if (role && !validRoles.includes(role)) {
+      return res.status(400).json({ message: 'Invalid role specified' });
     }
 
     const existingUser = await User.findOne({ email });
@@ -32,6 +38,7 @@ router.post('/signup', async (req, res) => {
       email,
       password: hashedPassword,
       fullName,
+      role: role || 'client', // Default to client if no role specified
     });
 
     await user.save();

@@ -1,11 +1,40 @@
-import { apiClient } from '@/integrations/mongodb/client';
+const API_BASE_URL = 'http://localhost:5001';
+
+// Helper function to get auth token
+const getAuthToken = () => localStorage.getItem('authToken');
+
+// Helper function to make authenticated requests
+const makeRequest = async (endpoint, options = {}) => {
+  const token = getAuthToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...options.headers,
+  };
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      localStorage.removeItem('authToken');
+      window.location.href = '/auth';
+    }
+    const errorData = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(errorData.message || errorData.error || `API error: ${response.status}`);
+  }
+
+  return response.json();
+};
 
 // Freelancer API
 export const freelancerApi = {
   getAll: async (params = {}) => {
     try {
       const queryString = new URLSearchParams(params).toString();
-      const data = await apiClient.get(`/api/freelancers${queryString ? `?${queryString}` : ''}`);
+      const data = await makeRequest(`/api/freelancers${queryString ? `?${queryString}` : ''}`);
       return { data, error: null };
     } catch (error) {
       return { data: null, error };
@@ -14,7 +43,7 @@ export const freelancerApi = {
 
   getById: async (id) => {
     try {
-      const data = await apiClient.get(`/api/freelancers/${id}`);
+      const data = await makeRequest(`/api/freelancers/${id}`);
       return { data, error: null };
     } catch (error) {
       return { data: null, error };
@@ -23,7 +52,10 @@ export const freelancerApi = {
 
   create: async (freelancer) => {
     try {
-      const data = await apiClient.post('/api/freelancers', freelancer);
+      const data = await makeRequest('/api/freelancers', {
+        method: 'POST',
+        body: JSON.stringify(freelancer),
+      });
       return { data, error: null };
     } catch (error) {
       return { data: null, error };
@@ -32,7 +64,10 @@ export const freelancerApi = {
 
   update: async (id, freelancer) => {
     try {
-      const data = await apiClient.put(`/api/freelancers/${id}`, freelancer);
+      const data = await makeRequest(`/api/freelancers/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(freelancer),
+      });
       return { data, error: null };
     } catch (error) {
       return { data: null, error };
@@ -41,7 +76,9 @@ export const freelancerApi = {
 
   delete: async (id) => {
     try {
-      await apiClient.delete(`/api/freelancers/${id}`);
+      await makeRequest(`/api/freelancers/${id}`, {
+        method: 'DELETE',
+      });
       return { error: null };
     } catch (error) {
       return { error };
@@ -54,7 +91,7 @@ export const reportsApi = {
   getAll: async (type) => {
     try {
       const queryString = type ? `?type=${type}` : '';
-      const data = await apiClient.get(`/api/reports${queryString}`);
+      const data = await makeRequest(`/api/reports${queryString}`);
       return { data, error: null };
     } catch (error) {
       return { data: null, error };
@@ -63,7 +100,10 @@ export const reportsApi = {
 
   create: async (report) => {
     try {
-      const data = await apiClient.post('/api/reports', report);
+      const data = await makeRequest('/api/reports', {
+        method: 'POST',
+        body: JSON.stringify(report),
+      });
       return { data, error: null };
     } catch (error) {
       return { data: null, error };
@@ -72,7 +112,9 @@ export const reportsApi = {
 
   delete: async (id) => {
     try {
-      await apiClient.delete(`/api/reports/${id}`);
+      await makeRequest(`/api/reports/${id}`, {
+        method: 'DELETE',
+      });
       return { error: null };
     } catch (error) {
       return { error };
@@ -84,7 +126,7 @@ export const reportsApi = {
 export const settingsApi = {
   getAll: async () => {
     try {
-      const data = await apiClient.get('/api/settings');
+      const data = await makeRequest('/api/settings');
       return { data, error: null };
     } catch (error) {
       return { data: null, error };
@@ -93,7 +135,7 @@ export const settingsApi = {
 
   get: async (key) => {
     try {
-      const data = await apiClient.get(`/api/settings/${key}`);
+      const data = await makeRequest(`/api/settings/${key}`);
       return { data, error: null };
     } catch (error) {
       return { data: null, error };
@@ -102,7 +144,10 @@ export const settingsApi = {
 
   set: async (setting) => {
     try {
-      const data = await apiClient.put(`/api/settings/${setting.key}`, setting);
+      const data = await makeRequest(`/api/settings/${setting.key}`, {
+        method: 'PUT',
+        body: JSON.stringify(setting),
+      });
       return { data, error: null };
     } catch (error) {
       return { data: null, error };
@@ -111,7 +156,9 @@ export const settingsApi = {
 
   delete: async (key) => {
     try {
-      await apiClient.delete(`/api/settings/${key}`);
+      await makeRequest(`/api/settings/${key}`, {
+        method: 'DELETE',
+      });
       return { error: null };
     } catch (error) {
       return { error };
@@ -123,7 +170,7 @@ export const settingsApi = {
 export const adminApi = {
   getUsers: async () => {
     try {
-      const data = await apiClient.get('/api/admin/users');
+      const data = await makeRequest('/api/admin/users');
       return { data, error: null };
     } catch (error) {
       return { data: null, error };
@@ -132,7 +179,10 @@ export const adminApi = {
 
   setUserRole: async (userId, role) => {
     try {
-      const data = await apiClient.put(`/api/admin/users/${userId}/role`, { role });
+      const data = await makeRequest(`/api/admin/users/${userId}/role`, {
+        method: 'PUT',
+        body: JSON.stringify({ role }),
+      });
       return { data, error: null };
     } catch (error) {
       return { data: null, error };
@@ -141,7 +191,7 @@ export const adminApi = {
 
   getStats: async () => {
     try {
-      const data = await apiClient.get('/api/admin/stats');
+      const data = await makeRequest('/api/admin/stats');
       return { data, error: null };
     } catch (error) {
       return { data: null, error };

@@ -8,7 +8,7 @@ const reportSchema = new mongoose.Schema({
   description: String,
   type: {
     type: String,
-    enum: ['freelancers', 'earnings', 'activity', 'performance'],
+    enum: ['general', 'analytics', 'performance', 'users'],
     required: true,
   },
   data: mongoose.Schema.Types.Mixed,

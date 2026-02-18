@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import { Report } from '../models/Report.js';
 import { authMiddleware, adminMiddleware } from '../middleware/auth.js';
 
@@ -20,7 +21,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   try {
     const report = new Report({
       ...req.body,

@@ -1,12 +1,14 @@
-﻿import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+﻿﻿import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AppToaster } from "@/components/ui/sonner";
 import DashboardLayout from "@/components/DashboardLayout";
+import AddFreelancer from "./pages/AddFreelancer.jsx";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
-import Freelancers from "./pages/freelancers";
+import Freelancers from "./pages/Freelancers";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import AdminPanel from "./pages/AdminPanel";
@@ -15,72 +17,40 @@ import Debug from "./pages/Debug";
 
 const queryClient = new QueryClient();
 
-// Protected route wrapper
+// 🔐 Protected Route
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  if (loading) return <div>Loading...</div>;
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+  if (!user) return <Navigate to="/auth" replace />;
 
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return children;
 }
 
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
-      <Route path="/debug" element={<Debug />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/debug" element={<Debug />} />
 
+      {/* ✅ Nested Dashboard Routes */}
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <DashboardLayout />
           </ProtectedRoute>
         }
-      />
-
-      <Route
-        path="/dashboard/freelancers"
-        element={
-          <ProtectedRoute>
-            <Freelancers />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/dashboard/reports"
-        element={
-          <ProtectedRoute>
-            <Reports />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/dashboard/settings"
-        element={
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/dashboard/admin"
-        element={
-          <ProtectedRoute>
-            <AdminPanel />
-          </ProtectedRoute>
-        }
-      />
+      >
+        <Route index element={<Dashboard />} />
+        <Route path="freelancers" element={<Freelancers />} />
+        <Route path="freelancers/add" element={<AddFreelancer />} />
+        <Route path="reports" element={<Reports />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="admin" element={<AdminPanel />} />
+      </Route>
 
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -93,6 +63,7 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <AppRoutes />
+          <AppToaster />
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

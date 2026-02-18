@@ -1,6 +1,6 @@
 // MongoDB client configuration
 const MONGODB_URL = import.meta.env.VITE_MONGODB_URL || 'mongodb://localhost:27017';
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
 
 export const apiClient = {
   baseURL: API_BASE_URL,

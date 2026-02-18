@@ -71,7 +71,7 @@ export default function Reports() {
       }
 
       if (freelancersRes.data) {
-        const freelancers = freelancersRes.data;
+        const freelancers = freelancersRes.data?.data || [];
         const active = freelancers.filter((f) => f.status === 'active').length;
         const avgRate = freelancers.length > 0
           ? freelancers.reduce((acc, f) => acc + (f.hourly_rate || 0), 0) / freelancers.length
