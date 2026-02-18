@@ -1,4 +1,4 @@
-﻿﻿import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppToaster } from "@/components/ui/sonner";
@@ -8,6 +8,9 @@ import AddFreelancer from "./pages/AddFreelancer.jsx";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import ClientDashboard from "./pages/ClientDashboard";
+import FreelancerDashboard from "./pages/FreelancerDashboard";
+import HireFreelancersDashboard from "./pages/HireFreelancersDashboard";
 import Freelancers from "./pages/Freelancers";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
@@ -28,6 +31,20 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+// Role-based Dashboard Component
+function RoleBasedDashboard() {
+  const { role } = useAuth();
+
+  if (role === 'freelancer') {
+    return <FreelancerDashboard />;
+  } else if (role === 'client') {
+    return <HireFreelancersDashboard />;
+  } else {
+    // Admin or other roles see the original dashboard
+    return <Dashboard />;
+  }
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -44,9 +61,10 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Dashboard />} />
+        <Route index element={<RoleBasedDashboard />} />
         <Route path="freelancers" element={<Freelancers />} />
         <Route path="freelancers/add" element={<AddFreelancer />} />
+        <Route path="hire" element={<HireFreelancersDashboard />} />
         <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />
         <Route path="admin" element={<AdminPanel />} />

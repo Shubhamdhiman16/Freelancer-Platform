@@ -1,229 +1,249 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Briefcase, Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
+import { Briefcase, User, Eye, EyeOff, Loader2 } from 'lucide-react';
+import AnimatedBackground from '@/components/AnimatedBackground';
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
-  const defaultRole = searchParams.get('role') || 'client';
-  const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
+  const { signIn, signUp } = useAuth();
 
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
-  const [signupName, setSignupName] = useState('');
+  const [activeTab, setActiveTab] = useState('signin');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('client');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    fullName: '',
+  });
 
+  const { user } = useAuth();
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    navigate('/dashboard');
+    return null;
   }
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-
-    if (!loginEmail || !loginPassword) {
-      toast.error('Please fill in all fields');
-      return;
-    }
-
-    setIsLoading(true);
-    const { error } = await signIn(loginEmail, loginPassword);
-    setIsLoading(false);
-
-    if (error) {
-      toast.error(error.message || 'Login failed');
-      return;
-    }
-
-    toast.success('Welcome back!');
-    navigate('/dashboard');
+  const handleInputChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
 
-  const handleSignup = async (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    if (!signupEmail || !signupPassword || !signupName) {
-      toast.error('Please fill in all fields');
-      return;
+    try {
+      const { error } = await signIn(formData.email, formData.password);
+      if (error) {
+        toast.error(error);
+      } else {
+        toast.success('Welcome back!');
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      toast.error('Sign in failed');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (signupPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await signUp(formData.email, formData.password, formData.fullName, selectedRole);
+      if (error) {
+        toast.error(error);
+      } else {
+        toast.success('Account created successfully!');
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      toast.error('Sign up failed');
+    } finally {
+      setLoading(false);
     }
-
-    setIsLoading(true);
-    const { error } = await signUp(signupEmail, signupPassword, signupName, defaultRole);
-    setIsLoading(false);
-
-    if (error) {
-      toast.error(error.message || 'Sign up failed');
-      return;
-    }
-
-    toast.success('Account created successfully!');
-    navigate('/dashboard');
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-        className="w-full max-w-md"
-      >
-        <div className="text-center mb-8">
-          <div className="inline-flex p-3 rounded-full gradient-primary/10 mb-4">
-            <Briefcase className="h-8 w-8 text-primary" />
-          </div>
-          <h1 className="text-3xl font-bold gradient-text">FreelanceHub</h1>
-          <p className="text-muted-foreground mt-2">Freelancer Management Platform</p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+      <AnimatedBackground variant="blue" />
 
-        <Card>
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 rounded-t-lg rounded-b-none border-b">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
+      <div className="relative z-10 w-full max-w-md p-6">
+        <Card className="backdrop-blur-sm bg-white/10 border-white/20 shadow-2xl">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-white">Welcome to FreelanceHub</CardTitle>
+            <CardDescription className="text-gray-300">
+              Connect with top freelancers or find your next project
+            </CardDescription>
+          </CardHeader>
 
-            <TabsContent value="signin">
-              <CardContent className="pt-6">
-                <form onSubmit={handleLogin} className="space-y-4">
+          <CardContent>
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <Label htmlFor="role-switch" className="text-white text-sm">Hire Freelancers</Label>
+              <Switch
+                id="role-switch"
+                checked={selectedRole === 'freelancer'}
+                onCheckedChange={(checked) => setSelectedRole(checked ? 'freelancer' : 'client')}
+              />
+              <Label htmlFor="role-switch" className="text-white text-sm">Join as Freelancer</Label>
+            </div>
+
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-white/10">
+                <TabsTrigger value="signin" className="text-white data-[state=active]:bg-white/20">
+                  Sign In
+                </TabsTrigger>
+                <TabsTrigger value="signup" className="text-white data-[state=active]:bg-white/20">
+                  Sign Up
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="signin" className="space-y-4 mt-6">
+                <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
-                        className="pl-10"
-                        disabled={isLoading}
-                      />
-                    </div>
+                    <Label htmlFor="email" className="text-white">Email</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password" className="text-white">Password</Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        className="pl-10"
-                        disabled={isLoading}
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter your password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        required
+                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pr-10"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                    disabled={loading}
+                  >
+                    {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in...
+                        Signing In...
                       </>
                     ) : (
-                      <>
-                        Sign In
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </>
+                      'Sign In'
                     )}
                   </Button>
                 </form>
-              </CardContent>
-            </TabsContent>
+              </TabsContent>
 
-            <TabsContent value="signup">
-              <CardContent className="pt-6">
-                <form onSubmit={handleSignup} className="space-y-4">
+              <TabsContent value="signup" className="space-y-4 mt-6">
+                <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="name"
-                        type="text"
-                        placeholder="John Doe"
-                        value={signupName}
-                        onChange={(e) => setSignupName(e.target.value)}
-                        className="pl-10"
-                        disabled={isLoading}
-                      />
-                    </div>
+                    <Label htmlFor="fullName" className="text-white">Full Name</Label>
+                    <Input
+                      id="fullName"
+                      name="fullName"
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={formData.fullName}
+                      onChange={handleInputChange}
+                      required
+                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={signupEmail}
-                        onChange={(e) => setSignupEmail(e.target.value)}
-                        className="pl-10"
-                        disabled={isLoading}
-                      />
-                    </div>
+                    <Label htmlFor="email" className="text-white">Email</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="password" className="text-white">Password</Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={signupPassword}
-                        onChange={(e) => setSignupPassword(e.target.value)}
-                        className="pl-10"
-                        disabled={isLoading}
+                        id="password"
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Create a password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        required
+                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pr-10"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
-                    <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
+                    disabled={loading}
+                  >
+                    {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account...
+                        Creating Account...
                       </>
                     ) : (
-                      <>
-                        Create Account
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </>
+                      'Create Account'
                     )}
                   </Button>
                 </form>
-              </CardContent>
-            </TabsContent>
-          </Tabs>
+              </TabsContent>
+            </Tabs>
+
+            <p className="text-center text-sm text-gray-400 mt-4">
+              By continuing, you agree to our Terms of Service and Privacy Policy
+            </p>
+          </CardContent>
         </Card>
-
-        <p className="text-center text-sm text-muted-foreground mt-4">
-          Built with React, Node.js, and MongoDB
-        </p>
-      </motion.div>
+      </div>
     </div>
   );
 }

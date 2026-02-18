@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import AnimatedBackground from '@/components/AnimatedBackground';
 import {
   Dialog,
   DialogContent,
@@ -81,7 +82,7 @@ export default function Freelancers() {
       };
 
       if (editingFreelancer) {
-        const { error } = await freelancerApi.update(editingFreelancer.id, freelancerData);
+        const { error } = await freelancerApi.update(editingFreelancer._id || editingFreelancer.id, freelancerData);
         if (error) throw error;
         toast.success('Freelancer updated successfully');
       } else {
@@ -117,7 +118,17 @@ export default function Freelancers() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (freelancer) => {
+    console.log('Deleting freelancer:', freelancer);
+    console.log('Freelancer ID:', freelancer._id || freelancer.id);
+
+    const id = freelancer._id || freelancer.id;
+    if (!id) {
+      console.error('No ID found on freelancer object:', freelancer);
+      toast.error('Invalid freelancer ID');
+      return;
+    }
+
     if (!confirm('Are you sure you want to delete this freelancer?')) return;
 
     try {
@@ -158,6 +169,8 @@ export default function Freelancers() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
+      <AnimatedBackground variant="dark" />
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -412,7 +425,22 @@ export default function Freelancers() {
                     </div>
                   )}
 
-                  <div className="flex justify-end">
+                  <div className="flex justify-end gap-2">
+                    {(role === 'admin' || role === 'manager') && (
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          if (confirm('Are you sure you want to delete this freelancer?')) {
+                            handleDelete(viewingFreelancer);
+                            setIsDetailDialogOpen(false);
+                          }
+                        }}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Freelancer
+                      </Button>
+                    )}
                     <Button variant="outline" onClick={() => setIsDetailDialogOpen(false)} className="border-gray-600 text-gray-300 hover:bg-gray-700">
                       Close
                     </Button>
@@ -525,25 +553,23 @@ export default function Freelancers() {
                         View Details
                       </Button>
                       {(role === 'admin' || role === 'manager') && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(freelancer)}
-                            className="text-gray-400 hover:text-white hover:bg-gray-600"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(freelancer.id)}
-                            className="text-gray-400 hover:text-white hover:bg-gray-600"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(freelancer)}
+                          className="text-gray-400 hover:text-white hover:bg-gray-600"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(freelancer)}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-600/20"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </Card>

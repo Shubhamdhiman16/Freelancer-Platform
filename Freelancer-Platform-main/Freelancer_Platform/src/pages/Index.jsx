@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import AnimatedBackground from '@/components/AnimatedBackground';
 import {
   Briefcase,
   Users,
@@ -14,6 +15,10 @@ import {
   CheckCircle,
   Globe,
   Award,
+  Sparkles,
+  Target,
+  Clock,
+  Heart,
 } from 'lucide-react';
 
 const features = [
@@ -89,10 +94,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative overflow-hidden">
-      {/* Floating Elements */}
-      <div className="absolute top-20 left-10 w-20 h-20 bg-blue-500/20 rounded-full blur-xl animate-pulse"></div>
-      <div className="absolute top-40 right-20 w-32 h-32 bg-purple-500/20 rounded-full blur-xl animate-pulse delay-1000"></div>
-      <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-cyan-500/20 rounded-full blur-xl animate-pulse delay-500"></div>
+      <AnimatedBackground variant="blue" />
 
       <div className="relative z-10">
         {/* Navbar */}
@@ -155,7 +157,7 @@ export default function Index() {
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 px-8 py-4 text-lg" asChild>
-                  <Link to="/auth?role=client">Join as Freelancer</Link>
+                  <Link to="/auth?role=freelancer">Join as Freelancer</Link>
                 </Button>
               </div>
             </motion.div>
@@ -305,7 +307,7 @@ export default function Index() {
                 <Briefcase className="h-6 w-6 text-white" />
               </div>
             </div>
-            <p className="text-gray-400 mb-4">© 2024 FreelanceHub - Connecting Talent Worldwide</p>
+            <p className="text-gray-400 mb-4">ï¿½ 2024 FreelanceHub - Connecting Talent Worldwide</p>
             <div className="flex justify-center gap-6 text-sm text-gray-500">
               <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-white transition-colors">Terms of Service</a>

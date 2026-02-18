@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,11 +25,15 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const navItems = [
+const baseNavItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/dashboard/freelancers', icon: Users, label: 'Freelancers' },
   { href: '/dashboard/reports', icon: FileText, label: 'Reports' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
+];
+
+const clientItems = [
+  { href: '/dashboard/hire', icon: Briefcase, label: 'Hire Freelancers' },
 ];
 
 const adminItems = [
@@ -47,8 +51,19 @@ export default function DashboardLayout() {
     navigate('/auth');
   };
 
-  const allNavItems =
-    role === 'admin' ? [...navItems, ...adminItems] : navItems;
+  // Build navigation items based on role
+  let navItems = [];
+  if (role === 'client') {
+    navItems = [
+      { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+      ...clientItems,
+    ];
+  } else {
+    navItems = [...baseNavItems];
+    if (role === 'admin') {
+      navItems = [...navItems, ...adminItems];
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,7 +81,7 @@ export default function DashboardLayout() {
             </Link>
 
             <nav className="hidden md:flex items-center gap-1">
-              {allNavItems.map((item) => {
+              {navItems.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link

@@ -27,9 +27,11 @@ import {
   Sparkles,
   Zap,
   Shield,
+  Search,
+  Filter,
 } from "lucide-react";
 
-export default function Dashboard() {
+export default function ClientDashboard() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
 
@@ -88,23 +90,23 @@ export default function Dashboard() {
 
   const statCards = [
     {
-      title: "Total Freelancers",
-      value: stats.totalFreelancers,
+      title: "Available Freelancers",
+      value: stats.activeFreelancers,
       icon: Users,
       color: "text-blue-400",
       bgColor: "bg-blue-500/10",
     },
     {
-      title: "Active Freelancers",
-      value: stats.activeFreelancers,
-      icon: CheckCircle,
+      title: "Active Projects",
+      value: stats.pendingProjects,
+      icon: Briefcase,
       color: "text-green-400",
       bgColor: "bg-green-500/10",
     },
     {
-      title: "Total Projects",
-      value: stats.totalProjects,
-      icon: Briefcase,
+      title: "Total Spent",
+      value: `$${stats.totalRevenue.toLocaleString()}`,
+      icon: DollarSign,
       color: "text-purple-400",
       bgColor: "bg-purple-500/10",
     },
@@ -119,32 +121,32 @@ export default function Dashboard() {
 
   const quickActions = [
     {
-      title: "Add Freelancer",
-      description: "Register new talent",
-      icon: Plus,
+      title: "Browse Freelancers",
+      description: "Find perfect talent",
+      icon: Search,
       color: "from-blue-500 to-blue-600",
       bgColor: "bg-blue-500/10",
+      action: () => navigate("/dashboard/freelancers"),
+    },
+    {
+      title: "Post Project",
+      description: "Create new opportunity",
+      icon: Plus,
+      color: "from-green-500 to-green-600",
+      bgColor: "bg-green-500/10",
       action: () => navigate("/dashboard/freelancers/add"),
     },
     {
       title: "View Reports",
-      description: "Platform analytics",
+      description: "Project analytics",
       icon: BarChart3,
-      color: "from-green-500 to-green-600",
-      bgColor: "bg-green-500/10",
+      color: "from-purple-500 to-purple-600",
+      bgColor: "bg-purple-500/10",
       action: () => navigate("/dashboard/reports"),
     },
     {
-      title: "Settings",
-      description: "Platform config",
-      icon: Settings,
-      color: "from-purple-500 to-purple-600",
-      bgColor: "bg-purple-500/10",
-      action: () => navigate("/dashboard/settings"),
-    },
-    {
       title: "Messages",
-      description: "Client communications",
+      description: "Communicate with freelancers",
       icon: MessageSquare,
       color: "from-orange-500 to-orange-600",
       bgColor: "bg-orange-500/10",
@@ -164,22 +166,22 @@ export default function Dashboard() {
               Welcome back, {user?.email?.split("@")[0]}!
             </h1>
             <p className="text-gray-300 text-lg">
-              Your freelancer platform dashboard
+              Find and hire top freelance talent
             </p>
             <div className="flex items-center space-x-4 mt-4">
               <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-500/30">
-                <Activity className="w-3 h-3 mr-1" />
-                {stats.activeFreelancers} Active
+                <Users className="w-3 h-3 mr-1" />
+                {stats.activeFreelancers} Available
               </Badge>
               <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30">
                 <Target className="w-3 h-3 mr-1" />
-                {stats.pendingProjects} Pending
+                {stats.pendingProjects} Active Projects
               </Badge>
             </div>
           </div>
           <div className="hidden md:block">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center border border-gray-600">
-              <Award className="w-10 h-10 text-blue-400" />
+              <Briefcase className="w-10 h-10 text-blue-400" />
             </div>
           </div>
         </div>
@@ -202,13 +204,8 @@ export default function Dashboard() {
                 <div className="text-3xl font-bold text-white mb-2">
                   {loading ? "..." : stat.value}
                 </div>
-                <div className={`text-xs px-2 py-1 rounded-full inline-flex items-center ${
-                  stat.changeType === 'positive'
-                    ? 'bg-green-500/20 text-green-400'
-                    : 'bg-red-500/20 text-red-400'
-                }`}>
-                  <TrendingUp className="w-3 h-3 mr-1" />
-                  {stat.change} from last month
+                <div className="text-xs text-gray-400">
+                  Ready to work with you
                 </div>
               </CardContent>
             </Card>
@@ -243,14 +240,14 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Activity Grid */}
+        {/* Freelancer Discovery */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Freelancers */}
+          {/* Featured Freelancers */}
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader className="border-b border-gray-700">
               <CardTitle className="text-xl font-semibold text-white flex items-center">
-                <Users className="w-5 h-5 mr-2 text-blue-400" />
-                Recent Freelancers
+                <Star className="w-5 h-5 mr-2 text-yellow-400" />
+                Featured Freelancers
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
@@ -268,20 +265,15 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <p className="font-medium text-white">{freelancer.name}</p>
-                          <p className="text-sm text-gray-400">{freelancer.email}</p>
+                          <p className="text-sm text-gray-400">{freelancer.skills?.join(', ')}</p>
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-green-400">${freelancer.hourly_rate}/hr</p>
-                        <Badge variant="secondary" className={`text-xs ${
-                          freelancer.status === 'active'
-                            ? 'bg-green-500/20 text-green-400'
-                            : freelancer.status === 'inactive'
-                            ? 'bg-red-500/20 text-red-400'
-                            : 'bg-yellow-500/20 text-yellow-400'
-                        }`}>
-                          {freelancer.status}
-                        </Badge>
+                        <div className="flex items-center">
+                          <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                          <span className="text-xs text-gray-400 ml-1">{freelancer.rating || 0}</span>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -290,127 +282,82 @@ export default function Dashboard() {
                     className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
                     onClick={() => navigate("/dashboard/freelancers")}
                   >
-                    View All Freelancers
+                    Browse All Freelancers
                   </Button>
                 </div>
               ) : (
                 <div className="text-center py-8">
                   <Users className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-white mb-2">No freelancers yet</h3>
+                  <h3 className="text-lg font-semibold text-white mb-2">No freelancers available</h3>
                   <p className="text-gray-400 mb-4">
-                    Start building your platform
+                    Check back later for new talent
                   </p>
-                  <Button onClick={() => navigate("/dashboard/freelancers/add")} className="bg-blue-600 hover:bg-blue-700">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add First Freelancer
-                  </Button>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Recent Reports */}
+          {/* Project Status */}
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader className="border-b border-gray-700">
               <CardTitle className="text-xl font-semibold text-white flex items-center">
-                <BarChart3 className="w-5 h-5 mr-2 text-green-400" />
-                Recent Reports
+                <Activity className="w-5 h-5 mr-2 text-green-400" />
+                Your Projects
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400"></div>
-                </div>
-              ) : recentReports.length > 0 ? (
-                <div className="space-y-4">
-                  {recentReports.map((report) => (
-                    <div key={report.id} className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors duration-200">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-full flex items-center justify-center border border-gray-600">
-                          <FileText className="w-5 h-5 text-green-400" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-white">{report.title}</p>
-                          <p className="text-sm text-gray-400">{report.type}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500">
-                          {new Date(report.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
                     </div>
-                  ))}
-                  <Button
-                    variant="outline"
-                    className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
-                    onClick={() => navigate("/dashboard/reports")}
-                  >
-                    View All Reports
-                  </Button>
+                    <div>
+                      <p className="font-medium text-white">Website Redesign</p>
+                      <p className="text-sm text-gray-400">Completed - $2,500</p>
+                    </div>
+                  </div>
+                  <Badge className="bg-green-500/20 text-green-400">Completed</Badge>
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <BarChart3 className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-white mb-2">No reports yet</h3>
-                  <p className="text-gray-400 mb-4">
-                    Generate your first report
-                  </p>
-                  <Button onClick={() => navigate("/dashboard/reports")} className="bg-green-600 hover:bg-green-700">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Report
-                  </Button>
+                <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+                      <Clock className="w-4 h-4 text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-white">Mobile App Development</p>
+                      <p className="text-sm text-gray-400">In Progress - $5,000</p>
+                    </div>
+                  </div>
+                  <Badge className="bg-blue-500/20 text-blue-400">In Progress</Badge>
                 </div>
-              )}
+                <Button
+                  variant="outline"
+                  className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+                  onClick={() => navigate("/dashboard/reports")}
+                >
+                  View All Projects
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Activity Feed */}
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader className="border-b border-gray-700">
-            <CardTitle className="text-xl font-semibold text-white flex items-center">
-              <Activity className="w-5 h-5 mr-2 text-purple-400" />
-              Activity Feed
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-                  <Plus className="w-4 h-4 text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-white text-sm">
-                    <span className="font-medium">New freelancer</span> joined the platform
-                  </p>
-                  <p className="text-gray-500 text-xs">2 hours ago</p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-4 h-4 text-green-400" />
-                </div>
-                <div>
-                  <p className="text-white text-sm">
-                    <span className="font-medium">Project completed</span> successfully
-                  </p>
-                  <p className="text-gray-500 text-xs">5 hours ago</p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                  <Star className="w-4 h-4 text-yellow-400" />
-                </div>
-                <div>
-                  <p className="text-white text-sm">
-                    <span className="font-medium">New review</span> received (5 stars)
-                  </p>
-                  <p className="text-gray-500 text-xs">1 day ago</p>
-                </div>
-              </div>
-            </div>
+        {/* Call to Action */}
+        <Card className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-blue-500/30">
+          <CardContent className="p-8 text-center">
+            <h3 className="text-2xl font-bold text-white mb-4">Ready to Hire Top Talent?</h3>
+            <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
+              Browse our curated list of skilled freelancers and find the perfect match for your next project.
+            </p>
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              onClick={() => navigate("/dashboard/freelancers")}
+            >
+              <Search className="w-5 h-5 mr-2" />
+              Start Browsing Freelancers
+            </Button>
           </CardContent>
         </Card>
       </div>
